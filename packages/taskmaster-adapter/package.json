@@ -1,0 +1,23 @@
+{
+  "name": "@resoft/taskmaster-adapter",
+  "version": "0.1.0",
+  "description": "Taskmaster 适配器 - 封装 CLI/MCP 调用",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest"
+  },
+  "dependencies": {
+    "execa": "^9.5.2",
+    "fs-extra": "^11.3.0",
+    "glob": "^11.0.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "type": "module"
+}
