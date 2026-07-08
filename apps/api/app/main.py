@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth, projects, briefs, prds, tasks, agent_runs, knowledge, audit, integrations
+from app.routers import auth, projects, briefs, prds, tasks, agent_runs, knowledge, audit, integrations, ai
 from app.celery_app import celery_app
 
 
@@ -43,6 +43,7 @@ app.include_router(agent_runs.router, prefix="/api/v1/agent-runs", tags=["Agent 
 app.include_router(knowledge.router, prefix="/api/v1/knowledge", tags=["知识库"])
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["审计"])
 app.include_router(integrations.router, prefix="/api/v1/integrations", tags=["集成"])
+app.include_router(ai.router, prefix="/api/v1/ai", tags=["AI"])
 
 
 @app.get("/health")
