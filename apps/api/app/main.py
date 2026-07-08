@@ -50,6 +50,13 @@ async def health_check():
     return {"status": "ok", "version": "0.1.0"}
 
 
+@app.get("/health/ai")
+async def ai_health_check():
+    """Check AI service configuration and availability."""
+    from app.services import ai_service
+    return await ai_service.check_ai_health()
+
+
 @app.get("/")
 async def root():
     return {"message": "Resoft AI Delivery Studio API", "docs": "/docs"}
