@@ -1,4 +1,4 @@
-"""Services package — Auth, Project, Brief, PRD services."""
+"""Services package — Auth, Project, Brief, PRD, AI services."""
 from app.services.auth_service import (
     UserRegisterRequest,
     UserLoginRequest,
@@ -78,6 +78,19 @@ from app.services.prd_service import (
     get_prd_tasks,
 )
 
+from app.services.ai_service import (
+    GeneratedTask,
+    PRDGenerationResult,
+    TaskGenerationResult,
+    ChatMessage,
+    ChatCompletionResult,
+    generate_prd_from_brief,
+    generate_prd_from_brief_stream,
+    generate_tasks_from_prd,
+    chat_completion,
+    check_ai_health,
+)
+
 __all__ = [
     # Auth
     "UserRegisterRequest",
@@ -150,4 +163,15 @@ __all__ = [
     "generate_prd_from_brief",
     "generate_tasks_from_prd",
     "get_prd_tasks",
+    # AI
+    "GeneratedTask",
+    "PRDGenerationResult",
+    "TaskGenerationResult",
+    "ChatMessage",
+    "ChatCompletionResult",
+    "generate_prd_from_brief",
+    "generate_prd_from_brief_stream",
+    "generate_tasks_from_prd",
+    "chat_completion",
+    "check_ai_health",
 ]
