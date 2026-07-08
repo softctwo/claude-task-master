@@ -1,4 +1,4 @@
-"""PRD router."""
+"""PRD router with AI task generation."""
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,7 +12,7 @@ from app.schemas import (
     PRDCreate, PRDUpdate, PRDOut, PRDGenerateTasks,
     TaskOut, PaginationParams, PaginatedResponse,
 )
-from app.services import prd_service, task_service
+from app.services import prd_service, task_service, ai_service
 from app.utils.pagination import paginate
 
 router = APIRouter()
@@ -49,14 +49,14 @@ async def create_prd(
     current_user=Depends(get_current_user),
 ):
     """Create a PRD manually."""
-    prd = await prd_service.create(db, prd_in.model_dump())
+    prd = await prd_service.create_prd(db, prd_service.PRDCreateRequest(**prd_in.model_dump()))
     return PRDOut.model_validate(prd)
 
 
 @router.get("/{prd_id}", response_model=PRDOut)
 async def get_prd(prd_id: str, db: AsyncSession = Depends(get_db)):
     """Get PRD by ID."""
-    prd = await prd_service.get(db, prd_id)
+    prd = await prd_service.get_prd(db, prd_id)
     if not prd:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRD not found")
     return PRDOut.model_validate(prd)
@@ -70,10 +70,10 @@ async def update_prd(
     current_user=Depends(get_current_user),
 ):
     """Update PRD."""
-    prd = await prd_service.get(db, prd_id)
+    prd = await prd_service.get_prd(db, prd_id)
     if not prd:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRD not found")
-    updated = await prd_service.update(db, prd, prd_in.model_dump(exclude_unset=True))
+    updated = await prd_service.update_prd(db, prd_id, prd_service.PRDUpdateRequest(**prd_in.model_dump(exclude_unset=True)), current_user.user_id)
     return PRDOut.model_validate(updated)
 
 
@@ -84,10 +84,10 @@ async def delete_prd(
     current_user=Depends(require_manager_or_admin),
 ):
     """Delete PRD (admin/manager only)."""
-    prd = await prd_service.get(db, prd_id)
+    prd = await prd_service.get_prd(db, prd_id)
     if not prd:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRD not found")
-    await prd_service.delete(db, prd)
+    await prd_service.delete_prd(db, prd_id, current_user.user_id)
     return None
 
 
@@ -98,22 +98,50 @@ async def generate_tasks_from_prd(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Generate placeholder tasks from a PRD."""
-    prd = await prd_service.get(db, prd_id)
+    """Generate tasks from a PRD using AI."""
+    prd = await prd_service.get_prd(db, prd_id)
     if not prd:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRD not found")
 
-    # Placeholder: create 3 sample tasks (real implementation would parse PRD content)
-    tasks = []
-    for i in range(1, 4):
-        task_data = {
-            "project_id": str(prd.project_id),
-            "title": f"Task {i} from PRD {prd_id}",
-            "description": f"Auto-generated task placeholder {i}",
-            "priority": "medium",
-            "status": "pending",
-            "source_prd_id": prd_id,
-        }
-        t = await task_service.create(db, task_data)
-        tasks.append(TaskOut.model_validate(t))
-    return tasks
+    if not prd.content_markdown:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PRD has no content to generate tasks from")
+
+    try:
+        result = await ai_service.generate_tasks_from_prd(
+            prd_content=prd.content_markdown,
+            model=getattr(req, "model", None) or "gpt-4o",
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"AI task generation failed: {str(e)}")
+
+    # Create tasks from generated results
+    created_tasks = []
+    for task_data in result.tasks:
+        task_dict = task_data.model_dump()
+        task_dict["project_id"] = str(prd.project_id)
+        task_dict["source_prd_id"] = prd_id
+        task_dict["status"] = "pending"
+        
+        # Resolve dependencies by title to task IDs (simplified: store as text for now)
+        if task_dict.get("dependencies"):
+            task_dict["dependencies"] = []  # Will be resolved after all tasks created
+        
+        t = await task_service.create_task(db, task_dict)
+        created_tasks.append(TaskOut.model_validate(t))
+
+    return created_tasks
+
+
+@router.post("/{prd_id}/approve", response_model=PRDOut)
+async def approve_prd(
+    prd_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_manager_or_admin),
+):
+    """Approve a PRD."""
+    prd = await prd_service.approve_prd(db, prd_id, current_user.user_id)
+    return PRDOut.model_validate(prd)
