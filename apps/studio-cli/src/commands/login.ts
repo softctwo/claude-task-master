@@ -1,28 +1,39 @@
 import chalk from "chalk";
 import inquirer from "inquirer";
-import fs from "fs-extra";
-import path from "path";
-import os from "os";
-
-const CONFIG_DIR = path.join(os.homedir(), ".resoft-studio");
-const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
+import { loadConfig, saveConfig, createApiClient } from "./api-client.js";
 
 export async function login(options: { server: string }) {
   console.log(chalk.blue("🔐 登录到 Resoft AI Delivery Studio"));
 
   const answers = await inquirer.prompt([
     { type: "input", name: "email", message: "邮箱:" },
-    { type: "password", name: "password", message: "密码:" },
+    { type: "password", name: "password", message: "密码:", mask: "*" },
   ]);
 
-  // TODO: 调用后端 API 登录
-  console.log(chalk.green("✅ 登录成功"));
-  console.log(chalk.gray(`服务器: ${options.server}`));
+  const client = createApiClient({ server: options.server });
 
-  await fs.ensureDir(CONFIG_DIR);
-  await fs.writeJson(CONFIG_FILE, {
-    server: options.server,
-    email: answers.email,
-    token: "dummy-token", // TODO: 从 API 获取真实 token
-  });
+  try {
+    const { data } = await client.post("/auth/login", {
+      email: answers.email,
+      password: answers.password,
+    });
+
+    const token = data.access_token;
+    const user = data.user;
+
+    await saveConfig({
+      server: options.server,
+      email: answers.email,
+      token,
+    });
+
+    console.log(chalk.green("✅ 登录成功"));
+    console.log(chalk.gray(`  用户: ${user.name} (${user.email})`));
+    console.log(chalk.gray(`  角色: ${user.role}`));
+    console.log(chalk.gray(`  服务器: ${options.server}`));
+  } catch (error: any) {
+    console.error(chalk.red("❌ 登录失败"));
+    console.error(chalk.red(error.message || String(error)));
+    process.exit(1);
+  }
 }
