@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     
     access_token_expire_minutes: int = 60 * 24  # 1 day
     
+    # ── OpenAI / AI Configuration ──
+    openai_api_key: str = ""
+    openai_base_url: str = ""
+    openai_default_model: str = "gpt-4o"
+    openai_default_temperature: float = 0.7
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
