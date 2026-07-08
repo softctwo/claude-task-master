@@ -1,0 +1,30 @@
+{
+  "name": "@resoft/studio-cli",
+  "version": "0.1.0",
+  "description": "Resoft AI Delivery Studio 本地 CLI 同步工具",
+  "bin": {
+    "resoft-studio": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "axios": "^1.7.9",
+    "chalk": "^5.4.1",
+    "inquirer": "^12.3.0",
+    "fs-extra": "^11.3.0",
+    "glob": "^11.0.1",
+    "js-yaml": "^4.1.0",
+    "ora": "^8.1.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "type": "module"
+}

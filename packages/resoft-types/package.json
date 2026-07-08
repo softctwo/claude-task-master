@@ -1,0 +1,16 @@
+{
+  "name": "@resoft/types",
+  "version": "0.1.0",
+  "description": "Resoft AI Delivery Studio 共享类型定义",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "type": "module"
+}
