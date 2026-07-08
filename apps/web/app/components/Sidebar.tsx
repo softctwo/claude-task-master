@@ -10,6 +10,7 @@ import {
   BookOpen,
   Settings,
   Cpu,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,9 +18,11 @@ const navItems = [
   { href: "/", label: "仪表盘", icon: LayoutDashboard },
   { href: "/projects", label: "项目", icon: FolderKanban },
   { href: "/briefs", label: "Briefs", icon: FileText },
+  { href: "/prds", label: "PRDs", icon: FileText },
   { href: "/tasks", label: "任务", icon: ListChecks },
   { href: "/knowledge", label: "知识库", icon: BookOpen },
   { href: "/agent-runs", label: "Agent 执行", icon: Cpu },
+  { href: "/ai-chat", label: "AI 助手", icon: Sparkles },
   { href: "/settings", label: "设置", icon: Settings },
 ];
 
